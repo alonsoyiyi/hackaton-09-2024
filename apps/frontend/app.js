@@ -22,6 +22,8 @@ function pageLoad() {
 	console.log("pageLoad");
 	let savedState = localStorage.getItem(LS_KEY);
 	if (!savedState) {
+		// cambiar por redireccion al index
+		//window.location.href = '/index.html';
 		return;
 	}
 	loadState();
