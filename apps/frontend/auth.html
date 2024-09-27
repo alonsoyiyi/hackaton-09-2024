@@ -3,11 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Skills</title>
+    <title>Autenticación - Trade Skills</title>
 </head>
 <body>
-    <!-- Usar Javascript para recuperar el ID del user que viene en los parámetros -->
-    <!-- Luego hacer un fetch para obtener a todo el usuario y guardarlo en el State -->
-     <!-- Luego hacer un redirect hacia /index.html -->
+    <h1>Autenticando...</h1>
+    
+    <script>
+        function getUserIdFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        function setUserInLocalStorage(user) {
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        function fetchUserById(userId) {
+            return fetch(`https://backend-api.com/users/${userId}`)
+                .then(response => response.json())
+                .catch(err => {
+                    console.error('Error al obtener el usuario:', err);
+                    return null;
+                });
+        }
+
+        function authenticateUser() {
+            const userId = getUserIdFromURL();
+
+            if (userId) {
+                fetchUserById(userId)
+                    .then(user => {
+                        if (user) {
+                            setUserInLocalStorage(user);
+
+                            window.location.href = 'home.html';
+                        } else {
+                            console.error("Usuario no encontrado.");
+                            window.location.href = 'index.html';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error al autenticar:', err);
+                        window.location.href = 'index.html'; 
+                    });
+            } else {
+
+                window.location.href = 'index.html';
+            }
+        }
+
+        authenticateUser();
+    </script>
 </body>
 </html>
