@@ -22,42 +22,73 @@ app.post("/user", async (request, response) => {
 
 	const { email, phone, fullname } = request.body;
 	if (!email) {
-		return response.status(400).json({ message: "Debes poner tu nombre y correo de forma obligatoria" });
+		return response.status(400).json({ message: "Debes poner tu correo de forma obligatoria" });
 	}
 	try {
-		let: user = await User.findOne({email});
+		let user = await User.findOne({ email });
 		if (!user) {
-			user = new User ({ email, phone, fullname});
+			user = new User({ email, phone, fullname });
 			await user.save();
 		}
 
-		response.redirect("http://localhost:5500/auth?id=");
+		// response.redirect("http://localhost:5500/auth?id=");
+		response.redirect(`http://localhost:5500/auth?id=${user._id}`);
 
 
 	} catch (error) {
 		console.error(error);
-		response.status(500).json({message: "Error al crear el usuario"});
+		response.status(500).json({ message: "Error al crear el usuario" });
 	}
 
 });
 
 app.post("/skill", async (request, response) => {
 	// TODO: Agregar una habilidad a tu propio usuario en la DB (Mongo)
+	const { email, skill } = request.body;
+	if (!email || !skill) {
+		return response.status(400).json({ message: "Email y habilidad son requeridos." });
+	}
+	try {
+		const user = await User.findOne({ email });
+		if (!user) return response.status(404).json({ message: "usuario no encontrado" });
 
-	// const {email, skill} = request.body;
-	response.json({ message: "Nuevo skill agregado." });
+		user.skills.push(skill);
+		await user.save();
+		response.json({ message: "Nuevo skill agregado.", skills: user.skills });
+	} catch (error) {
+		console.error(error);
+		response.status(500).json({ message: "Error al agregar la habilidad" });
+	}
+
 });
 
 app.get("/user", async (request, response) => {
 	// TODO: Obtener tu información de usuario (incluyendo skills) de la DB (Mongo)
-	response.json({ message: "Este es tu usuario." });
+	const { email } = request.query;
+
+	if (!email) {
+		return response.status(400).json({ message: "Email es requerido." });
+	}
+	try {
+		const user = await User.findOne({ email }).populate("skills");
+		if (!user) return response.status(404).json({ message: "Usuario no encontrado." });
+		response.json({ data: user, message: "Este es tu usuario." });
+	} catch (error) {
+		console.error(error);
+		response.status(500).json({ message: "Error al obtener el usuario" });
+	}
 });
 
 app.get("/users", async (request, response) => {
 	// TODO: Obtener la información de todos los usuarios (incluyendo skills) de la DB (Mongo)
+	try {
+		const users = await User.find().populate("skills");
+		response.json({ data: users, message: "Usuarios y skills." });
+	} catch (error) {
+		console.error(error);
+		response.status(500).json({ message: "Error al cargar usuarios" });
+	}
 
-	const users = await User.find();
-	response.json({ data: users, message: "Usuarios y skills." });
 });
 
 app.listen(PORT, () => console.log("Listening on PORT", PORT));
